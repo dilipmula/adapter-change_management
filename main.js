@@ -85,10 +85,19 @@ function processRequestResults(error, response, body, callback) {
    * You must build the contents of this function.
    * Study your package and note which parts of the get()
    * and post() functions evaluate and respond to data
-   * and/or errors the request() function returns.
+   * and/or errors() the request() function returns.
    * This function must not check for a hibernating instance;
    * it must call function isHibernating.
    */
+    let callbackData = null;
+    let callbackError = null;
+  
+    if(!isHibernating(response)) {
+        callbackData = response;
+    } else {
+        callbackError = error;
+    }
+     return callback(callbackData, callbackError);
 }
 
 
@@ -109,6 +118,9 @@ function processRequestResults(error, response, body, callback) {
  */
 function sendRequest(callOptions, callback) {
   // Initialize return arguments for callback
+  let processedResults = null;
+  let processedError = null;
+  
   let uri;
   if (callOptions.query)
     uri = constructUri(callOptions.serviceNowTable, callOptions.query);
@@ -120,7 +132,16 @@ function sendRequest(callOptions, callback) {
    * from the previous lab. There should be no
    * hardcoded values.
    */
-  const requestOptions = {};
+  const requestOptions = {
+       method: callOptions.method,
+    auth: {
+      user: options.username,
+      pass: options.password,
+    },
+    baseUrl: options.url,
+    uri: uri,
+  };
+ 
   request(requestOptions, (error, response, body) => {
     processRequestResults(error, response, body, (processedResults, processedError) => callback(processedResults, processedError));
   });
